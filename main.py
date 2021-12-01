@@ -5,41 +5,43 @@ import sqlite3
 
 app = Flask(__name__)
 
-@app.route('/companyDetails', method=['POST'])
-def insert_data(url):
+@app.route('/companyDetails', methods=['GET'])
+def insert_data():
     try:
-        data = requests.get(url).json()
-        for row in data:
-            #companyId = request.json['companyId']
-            company_name = request.json['Symbol']
-            transaction_date = request.json['Time Series']
-            open = request.json['open']
-            high = request.json['high']
-            low = request.json['low']
-            close = request.json['close']
-            adjusted_close = request.json['adjusted_close']
-            volume = request.json['volume']
-            with sqlite3.connect('database.db') as conn:
-                try:
-                    cur=conn.cursor()
-                    cur.execute('''INSERT INTO company (company_name,transaction_date,open,high,low,close,adjusted_close,volume)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (company_name,transaction_date,open,high,low,close,adjusted_close,volume))
-                    conn.commit()
-                    msg='added successfully'
-                except:
-                    msg='error'
-                    conn.rollback()
-            conn.close()
-            print(msg)
+        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&apikey=NQCFKOVGZASY3EZ9&symbol=MSFT'
+        response = requests.get(url).json()
+        print(data)
+        #companyId = request.json['companyId']
+        company_name = response['Meta Data']['2. Symbol']
+        transaction_date = response['Time Series (Daily)']["2021-11-30"]
+        open = response['Time Series (Daily)']["2021-11-30"]['1. open']
+        high = response['Time Series (Daily)']["2021-11-30"]['2. high']
+        low = response['Time Series (Daily)']["2021-11-30"]['3. low']
+        close = response['Time Series (Daily)']["2021-11-30"]['4. close']
+        adjusted_close = response['Time Series (Daily)']["2021-11-30"]['5. adjusted_close']
+        volume = response['Time Series (Daily)']["2021-11-30"]['6. volume']
+        print(company_name,transaction_date,open)
+        response.content_type = 'application/json'
+        with sqlite3.connect('database.db') as conn:
+            try:
+                cur=conn.cursor()
+                cur.execute('''INSERT INTO company (company_name,transaction_date,open,high,low,close,adjusted_close,volume)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (company_name,transaction_date,open,high,low,close,adjusted_close,volume))
+                conn.commit()
+                msg='added successfully'
+            except:
+                msg='error'
+                conn.rollback()
+        conn.close()
+        print(msg)
+        #return dumps(("OK"),default=json_util.default)
             #return redirect(url_for('root'))
 
     except:
         print('Error Occurred while inserting data')
-        return None
-
-            
+        return None            
 
     
 if __name__ == '__main__':
-    insert_data('https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&apikey=NQCFKOVGZASY3EZ9&symbol=MSFT')
+    
     app.run(port=8000,debug=True)

@@ -10,8 +10,13 @@ def insert_data(url):
     try:
         
         response = requests.get(url).json()
-        return response
-
+        #print(response)
+        print(response['Meta Data']['2. Symbol'])
+        print(response['Time Series (Daily)']['2021-11-30'])
+        print(response['Time Series (Daily)'][0])
+        for row in response['Time Series (Daily)']['2021-11-29']:
+            print(row)
+            
     except:
         print('Error Occurred while inserting data')
         return None
